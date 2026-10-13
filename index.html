@@ -1,0 +1,602 @@
+<!--
+SPDX-FileCopyrightText: 2026 Michele Bussolotto <michelebussolotto@pm.me>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosteria - Installation Configurator</title>
+    <script>
+        // SPDX-License-Identifier: Apache-2.0
+        //
+        // Minimal gettext runtime for the configurator. Loads the compiled
+        // JSON catalog (locale/<lang>/LC_MESSAGES/configurator.json) and
+        // exposes L()/PL()/NL(). When opened directly from the filesystem the
+        // fetch fails and the English source text is used as-is.
+        (function() {
+            "use strict";
+            var catalog = {};
+            function detect() { return (navigator.language || "en").replace(/-/g, "_"); }
+            function load(lang) {
+                return fetch("locale/" + lang + "/LC_MESSAGES/configurator.json").then(function(response) {
+                    if (!response.ok) { throw new Error("no catalog"); }
+                    return response.json();
+                });
+            }
+            window.L = function(msgid) { return catalog[msgid] || msgid; };
+            window.PL = function(msgctxt, msgid) { return catalog[msgctxt + "\u0004" + msgid] || msgid; };
+            window.NL = function(singular, plural, n) {
+                var forms = catalog[singular + "\u0000" + plural];
+                return forms ? (forms[n === 1 ? 0 : 1] || singular) : (n === 1 ? singular : plural);
+            };
+            function apply() {
+                document.querySelectorAll("[data-i18n]").forEach(function(el) {
+                    el.textContent = L(el.getAttribute("data-i18n"));
+                });
+            }
+            function init() {
+                var lang = detect();
+                load(lang).catch(function() { return load(lang.split("_")[0]); })
+                    .catch(function() { return { messages: {} }; })
+                    .then(function(data) { catalog = data.messages || {}; apply(); });
+            }
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        header p { opacity: 0.9; }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        textarea {
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .app-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .app-item:hover {
+            background: #f9f9f9;
+        }
+        .app-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .app-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-large {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+        }
+        .instructions {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        .instructions code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .instructions pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .instructions pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        details {
+            margin-top: 15px;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #3498db;
+            padding: 10px 0;
+        }
+        summary:hover {
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Hosteria</h1>
+        <p data-i18n="Installation Configurator">Installation Configurator</p>
+    </header>
+
+    <div class="container">
+        <form id="configurator-form">
+            <div class="section">
+                <h2 data-i18n="System Configuration">System Configuration</h2>
+                <div class="form-group">
+                    <label for="hostname" data-i18n="Hostname">Hostname</label>
+                    <input type="text" id="hostname" name="hostname" value="hosteria" required>
+                    <div class="help-text" data-i18n="The hostname for your server (e.g., hosteria, myserver)">The hostname for your server (e.g., hosteria, myserver)</div>
+                </div>
+                <div class="form-group">
+                    <label for="timezone" data-i18n="Timezone">Timezone</label>
+                    <select id="timezone" name="timezone">
+                        <option value="Europe/Rome">Europe/Rome</option>
+                        <option value="Europe/London">Europe/London</option>
+                        <option value="Europe/Berlin">Europe/Berlin</option>
+                        <option value="Europe/Paris">Europe/Paris</option>
+                        <option value="America/New_York">America/New_York</option>
+                        <option value="America/Los_Angeles">America/Los_Angeles</option>
+                        <option value="America/Chicago">America/Chicago</option>
+                        <option value="Asia/Tokyo">Asia/Tokyo</option>
+                        <option value="Asia/Shanghai">Asia/Shanghai</option>
+                        <option value="Australia/Sydney">Australia/Sydney</option>
+                        <option value="UTC">UTC</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 data-i18n="Network & Domain">Network &amp; Domain</h2>
+                <div class="form-group">
+                    <label for="domain" data-i18n="Domain">Domain</label>
+                    <input type="text" id="domain" name="domain" value="hosteria.dedyn.io" required>
+                    <div class="help-text" data-i18n="The public domain your apps are served under. Apps are reached at <app>.<domain> (e.g. jellyfin.hosteria.dedyn.io). With deSEC, use the dedyn.io name you registered (e.g. myname.dedyn.io); otherwise use your own public domain.">The public domain your apps are served under. Apps are reached at &lt;app&gt;.&lt;domain&gt; (e.g. jellyfin.hosteria.dedyn.io). With deSEC, use the dedyn.io name you registered (e.g. myname.dedyn.io); otherwise use your own public domain.</div>
+                </div>
+                <div class="form-group">
+                    <label for="ddns-token" data-i18n="deSEC DDNS Token">deSEC DDNS Token</label>
+                    <input type="text" id="ddns-token" name="ddns-token" placeholder="your-desec-token">
+                    <div class="help-text" data-i18n="Optional. Leave blank to skip automatic dynamic DNS. Get your token from desec.io">Optional. Leave blank to skip automatic dynamic DNS. Get your token from <a href="https://desec.io" target="_blank">desec.io</a></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 data-i18n="Authentication">Authentication</h2>
+                <div class="form-group">
+                    <label for="admin-password" data-i18n="Admin Password">Admin Password</label>
+                    <input type="password" id="admin-password" name="admin-password" required>
+                    <div class="help-text" data-i18n="Password for the 'hosteria' user (min 8 characters)">Password for the 'hosteria' user (min 8 characters)</div>
+                </div>
+                <div class="form-group">
+                    <label for="admin-password-confirm" data-i18n="Confirm Password">Confirm Password</label>
+                    <input type="password" id="admin-password-confirm" name="admin-password-confirm" required>
+                </div>
+                <div class="form-group">
+                    <label for="ssh-key" data-i18n="SSH Public Key">SSH Public Key</label>
+                    <textarea id="ssh-key" name="ssh-key" rows="3" placeholder="ssh-rsa AAAA..."></textarea>
+                    <div class="help-text" data-i18n="Your SSH public key for passwordless login (optional)">Your SSH public key for passwordless login (optional)</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 data-i18n="Applications">Applications</h2>
+                <p data-i18n="Select the applications you want to install:">Select the applications you want to install:</p>
+                <div class="app-grid">
+                    <div class="app-item">
+                        <input type="checkbox" id="app-traefik" name="apps" value="traefik" checked disabled>
+                        <label for="app-traefik">Traefik (required)</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-authelia" name="apps" value="authelia" checked disabled>
+                        <label for="app-authelia">Authelia (required)</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-jellyfin" name="apps" value="jellyfin" checked>
+                        <label for="app-jellyfin">Jellyfin</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-sonarr" name="apps" value="sonarr" checked>
+                        <label for="app-sonarr">Sonarr</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-radarr" name="apps" value="radarr" checked>
+                        <label for="app-radarr">Radarr</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-prowlarr" name="apps" value="prowlarr">
+                        <label for="app-prowlarr">Prowlarr</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-bazarr" name="apps" value="bazarr">
+                        <label for="app-bazarr">Bazarr</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-qbittorrent" name="apps" value="qbittorrent">
+                        <label for="app-qbittorrent">qBittorrent</label>
+                    </div>
+                    <div class="app-item">
+                        <input type="checkbox" id="app-overseerr" name="apps" value="overseerr">
+                        <label for="app-overseerr">Overseerr</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 data-i18n="Generate Installation Script">Generate Installation Script</h2>
+                <button type="button" class="btn btn-large" onclick="generateScript()" data-i18n="Download Combustion Script">
+                    Download Combustion Script
+                </button>
+
+                <details>
+                    <summary data-i18n="Installation Instructions">Installation Instructions</summary>
+                    <div class="instructions">
+                        <h3 data-i18n="How to Install Hosteria">How to Install Hosteria</h3>
+                        <ol>
+                            <li>
+                                <strong data-i18n="Download the official MicroOS image:">Download the official MicroOS image:</strong>
+                                <pre><code>wget https://download.opensuse.org/ports/aarch64/tumbleweed/appliances/openSUSE-MicroOS.aarch64-RaspberryPi.raw.xz</code></pre>
+                                <p data-i18n="For x86_64, use the SelfInstall ISO instead.">For x86_64, use the SelfInstall ISO instead.</p>
+                            </li>
+                            <li>
+                                <strong data-i18n="Flash to SD card or USB:">Flash to SD card or USB:</strong>
+                                <pre><code>xz -d openSUSE-MicroOS.aarch64-RaspberryPi.raw.xz
+sudo dd if=openSUSE-MicroOS.aarch64-RaspberryPi.raw of=/dev/sdX bs=4M status=progress
+sync</code></pre>
+                                <p>Replace <code>/dev/sdX</code> with your actual device.</p>
+                            </li>
+                            <li>
+                                <strong data-i18n="Create a combustion partition on a USB stick:">Create a combustion partition on a USB stick:</strong>
+                                <pre><code>sudo mkfs.ext4 /dev/sdY1
+sudo e2label /dev/sdY1 combustion
+sudo mount /dev/sdY1 /mnt
+sudo mkdir -p /mnt/combustion
+sudo cp ~/Downloads/hosteria-combustion.sh /mnt/combustion/script
+sudo umount /mnt</code></pre>
+                            </li>
+                            <li>
+                                <strong data-i18n="Insert both SD card and USB stick into your device and power on.">Insert both SD card and USB stick into your device and power on.</strong>
+                            </li>
+                            <li>
+                                <strong data-i18n="Wait 5-10 minutes for first boot setup.">Wait 5-10 minutes for first boot setup.</strong>
+                            </li>
+                            <li>
+                                <strong data-i18n="Access Cockpit:">Access Cockpit:</strong>
+                                <p>Open <code>https://hosteria.local:9090</code> from your phone or laptop.</p>
+                                <p>Login with user <code>hosteria</code> and your password.</p>
+                            </li>
+                        </ol>
+                    </div>
+                </details>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function generateScript() {
+            const form = document.getElementById('configurator-form');
+            const hostname = form.hostname.value;
+            const timezone = form.timezone.value;
+            const domain = form.domain.value;
+            const ddnsToken = form['ddns-token'].value;
+            const password = form['admin-password'].value;
+            const passwordConfirm = form['admin-password-confirm'].value;
+            const sshKey = form['ssh-key'].value;
+
+            if (password !== passwordConfirm) {
+                alert(L('Passwords do not match!'));
+                return;
+            }
+
+            if (password.length < 8) {
+                alert(L('Password must be at least 8 characters!'));
+                return;
+            }
+
+            const apps = Array.from(form.querySelectorAll('input[name="apps"]:checked'))
+                .map(cb => cb.value);
+
+            const ddnsBlock = ddnsToken.trim()
+                ? `network:
+  ddns:
+    provider: desec
+    token: "${ddnsToken}"
+    domain: ${domain}
+
+`
+                : '';
+
+            const script = `#!/bin/bash
+# combustion: network prepare
+#
+# Hosteria first-boot provisioning script
+# Generated by Hosteria Configurator
+#
+# Configuration:
+#   Hostname: ${hostname}
+#   Domain: ${domain}
+#   Timezone: ${timezone}
+
+set -euo pipefail
+
+exec > >(exec tee -a /dev/tty0) 2>&1
+
+echo "=== Hosteria First-Boot Setup ==="
+
+HOSTNAME="${hostname}"
+TIMEZONE="${timezone}"
+DOMAIN="${domain}"
+DDNS_TOKEN="${ddnsToken}"
+ADMIN_PASSWORD="${password}"
+SSH_KEY="${sshKey}"
+
+echo "Setting hostname to $HOSTNAME..."
+systemd-firstboot --force --hostname="$HOSTNAME"
+
+echo "Setting timezone to $TIMEZONE..."
+systemd-firstboot --force --timezone="$TIMEZONE"
+
+echo "Setting keyboard layout..."
+systemd-firstboot --force --keymap=us
+
+echo "Creating hosteria user..."
+useradd -m -s /bin/bash -G wheel hosteria
+echo "hosteria:$ADMIN_PASSWORD" | chpasswd
+
+echo "Enabling lingering for hosteria user..."
+loginctl enable-linger hosteria
+
+echo "Adding SSH key..."
+mkdir -p /home/hosteria/.ssh
+echo "$SSH_KEY" > /home/hosteria/.ssh/authorized_keys
+chmod 700 /home/hosteria/.ssh
+chmod 600 /home/hosteria/.ssh/authorized_keys
+chown -R hosteria:hosteria /home/hosteria/.ssh
+
+echo "Installing required packages..."
+transactional-update --non-interactive pkg install \\
+    podman \\
+    cockpit \\
+    cockpit-podman \\
+    cockpit-storaged \\
+    cockpit-networkmanager \\
+    curl \\
+    slirp4netns \\
+    fuse-overlayfs \\
+    avahi-daemon
+
+echo "Creating directories..."
+mkdir -p /home/hosteria/.config/hosteria
+mkdir -p /home/hosteria/.config/containers/systemd
+mkdir -p /home/hosteria/.config/systemd/user
+mkdir -p /home/hosteria/configs
+mkdir -p /home/hosteria/secure_configs
+mkdir -p /srv/storage/{media/{movies,tvseries,music,private},downloads,backups}
+
+chown -R hosteria:hosteria /home/hosteria
+chown -R hosteria:hosteria /srv/storage
+
+echo "Downloading Hosteria release..."
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+    RELEASE_URL="https://github.com/mbussolotto/hosteria/releases/latest/download/hosteria-linux-amd64.tar.gz"
+elif [ "$ARCH" = "aarch64" ]; then
+    RELEASE_URL="https://github.com/mbussolotto/hosteria/releases/latest/download/hosteria-linux-arm64.tar.gz"
+else
+    echo "Unsupported architecture: $ARCH"
+    exit 1
+fi
+
+curl -L "$RELEASE_URL" -o /tmp/hosteria.tar.gz
+mkdir -p /tmp/hosteria-release
+tar -xzf /tmp/hosteria.tar.gz -C /tmp/hosteria-release
+
+install -m 0755 /tmp/hosteria-release/hosteria /usr/local/bin/hosteria
+
+echo "Installing Cockpit plugin..."
+mkdir -p /usr/local/share/cockpit/hosteria
+cp -r /tmp/hosteria-release/share/hosteria/cockpit/. /usr/local/share/cockpit/hosteria/ 2>/dev/null || true
+
+echo "Installing example config and locale catalogs..."
+mkdir -p /usr/local/share/hosteria
+cp /tmp/hosteria-release/share/hosteria/config/config.example.yml /usr/local/share/hosteria/config.example.yml 2>/dev/null || true
+mkdir -p /usr/local/share/hosteria/locale
+cp -r /tmp/hosteria-release/share/hosteria/locale/. /usr/local/share/hosteria/locale/ 2>/dev/null || true
+
+echo "Installing app catalog..."
+mkdir -p /home/hosteria/.config/hosteria/catalog
+cp -r /tmp/hosteria-release/share/hosteria/catalog/. /home/hosteria/.config/hosteria/catalog/ 2>/dev/null || true
+chown -R hosteria:hosteria /home/hosteria/.config/hosteria/catalog
+
+rm -rf /tmp/hosteria.tar.gz /tmp/hosteria-release
+
+echo "Creating default configuration..."
+cat > /home/hosteria/.config/hosteria/config.yml << EOF
+system:
+  hostname: $HOSTNAME
+  timezone: $TIMEZONE
+  domain: $DOMAIN
+
+${ddnsBlock}proxy:
+  acme:
+    email: admin@$DOMAIN
+    dns_provider: desec
+
+auth:
+  enabled: true
+  users:
+    - username: admin
+      password: "change-me-immediately"
+      email: admin@$DOMAIN
+      groups:
+        - admins
+
+storage:
+  base_path: /srv/storage
+  config_path: /home/hosteria/configs
+  media_path: /srv/storage/media
+  downloads_path: /srv/storage/downloads
+
+apps:
+  traefik:
+    enabled: true
+  authelia:
+    enabled: true
+${apps.filter(a => a !== 'traefik' && a !== 'authelia').map(a => `  ${a}:\n    enabled: true`).join('\n')}
+EOF
+
+chown hosteria:hosteria /home/hosteria/.config/hosteria/config.yml
+
+echo "Enabling services..."
+systemctl enable --now cockpit.socket
+systemctl enable --now avahi-daemon
+
+sudo -u hosteria systemctl --user enable podman.socket
+sudo -u hosteria systemctl --user start podman.socket
+sudo -u hosteria systemctl --user enable podman-auto-update.timer
+sudo -u hosteria systemctl --user start podman-auto-update.timer
+
+echo "Generating Hosteria configuration..."
+sudo -u hosteria hosteria generate
+
+echo "Reloading systemd..."
+sudo -u hosteria systemctl --user daemon-reload
+
+echo "Starting services..."
+${apps.map(a => `sudo -u hosteria systemctl --user start ${a}.service || true`).join('\n')}
+
+echo "Showing connection plan..."
+sudo -u hosteria hosteria provision || echo "Note: Some services may not be ready yet"
+
+echo ""
+echo "=== Hosteria setup complete ==="
+echo "Access Cockpit at: https://$HOSTNAME.local:9090"
+echo "Default user: hosteria"
+echo ""
+echo "Next steps:"
+echo "  1. Open https://$HOSTNAME.local:9090 from your phone/laptop"
+echo "  2. Login with user 'hosteria' and your password"
+echo "  3. Open the 'Hosteria' section in the sidebar"
+echo "  4. Review and customize your configuration"
+echo ""
+
+echo "Hosteria provisioned on $(date)" > /etc/issue.d/90-hosteria.conf
+
+exec 1>&- 2>&-; wait;
+`;
+
+            const blob = new Blob([script], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hosteria-combustion.sh';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

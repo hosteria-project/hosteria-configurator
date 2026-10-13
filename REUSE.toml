@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Michele Bussolotto <michelebussolotto@pm.me>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+SPDX-PackageName = "hosteria-configurator"
+SPDX-PackageSupplier = "Michele Bussolotto <michelebussolotto@pm.me>"
+SPDX-PackageDownloadLocation = "https://github.com/mbussolotto/hosteria-configurator"
+
+[[annotations]]
+path = ["LICENSE", ".nojekyll"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Michele Bussolotto <michelebussolotto@pm.me>"
+SPDX-License-Identifier = "Apache-2.0"
