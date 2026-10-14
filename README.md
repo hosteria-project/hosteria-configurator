@@ -8,8 +8,8 @@ SPDX-License-Identifier: Apache-2.0
 
 The published (GitHub Pages) copy of the Hosteria installation configurator.
 
-- **Live:** https://mbussolotto.github.io/hosteria-configurator/
-- **Source of truth:** https://github.com/mbussolotto/hosteria (`configurator/`)
+- **Live:** https://hosteria-project.github.io/hosteria-configurator/
+- **Source of truth:** https://github.com/hosteria-project/hosteria (`configurator/`)
 
 This repository contains only the static configurator (a single HTML file). The
 main project is private; this public copy exists solely so GitHub Pages can

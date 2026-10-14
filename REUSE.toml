@@ -6,7 +6,7 @@ version = 1
 
 SPDX-PackageName = "hosteria-configurator"
 SPDX-PackageSupplier = "Michele Bussolotto <michelebussolotto@pm.me>"
-SPDX-PackageDownloadLocation = "https://github.com/mbussolotto/hosteria-configurator"
+SPDX-PackageDownloadLocation = "https://github.com/hosteria-project/hosteria-configurator"
 
 [[annotations]]
 path = ["LICENSE", ".nojekyll"]

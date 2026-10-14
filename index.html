@@ -481,9 +481,9 @@ chown -R hosteria:hosteria /srv/storage
 echo "Downloading Hosteria release..."
 ARCH=$(uname -m)
 if [ "$ARCH" = "x86_64" ]; then
-    RELEASE_URL="https://github.com/mbussolotto/hosteria/releases/latest/download/hosteria-linux-amd64.tar.gz"
+    RELEASE_URL="https://github.com/hosteria-project/hosteria/releases/latest/download/hosteria-linux-amd64.tar.gz"
 elif [ "$ARCH" = "aarch64" ]; then
-    RELEASE_URL="https://github.com/mbussolotto/hosteria/releases/latest/download/hosteria-linux-arm64.tar.gz"
+    RELEASE_URL="https://github.com/hosteria-project/hosteria/releases/latest/download/hosteria-linux-arm64.tar.gz"
 else
     echo "Unsupported architecture: $ARCH"
     exit 1
